@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caderneta Digital Pro</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --present-bg: #dcfce7; --present-txt: #166534; --present-border: #86efac;
+            --absent-bg: #fee2e2; --absent-txt: #991b1b; --absent-border: #fca5a5;
+            --just-bg: #fef9c3; --just-txt: #854d0e; --just-border: #fde047;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 100px; }
+        h1 { font-size: 1.4rem; margin-bottom: 16px; text-align: center; color: var(--primary); }
+        h2 { font-size: 1.2rem; margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+        
+        /* Dias da Semana */
+        .days-container { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; }
+        .day-btn { background: var(--card); border: 1px solid var(--border); padding: 10px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+        .day-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        /* Lista de Alunos */
+        .student-list { display: flex; flex-direction: column; gap: 12px; }
+        .student-card { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .student-name { font-weight: 600; margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; }
+        
+        /* Grid das 5 Aulas */
+        .lessons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .lesson-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 2px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-align: center; }
+        
+        /* Cores dos Estados */
+        .p-state { background: var(--present-bg); border: 1px solid var(--present-border); color: var(--present-txt); }
+        .f-state { background: var(--absent-bg); border: 1px solid var(--absent-border); color: var(--absent-txt); }
+        .j-state { background: var(--just-bg); border: 1px solid var(--just-border); color: var(--just-txt); }
+        
+        .lesson-btn span { font-size: 0.55rem; opacity: 0.7; text-transform: uppercase; margin-bottom: 2px; font-weight: normal; }
+
+        /* Tabela de Relatório */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .report-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); font-size: 0.85rem; }
+        .report-table th, .report-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        .report-table th { background: #f1f5f9; font-weight: 600; }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; min-width: 20px; text-align: center; }
+
+        /* Barra Fixa Inferior */
+        .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: center; z-index: 100; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; flex: 1; max-width: 200px; cursor: pointer; }
+        .btn-secondary { background: #64748b; }
+    </style>
+</head>
+<body>
+
+    <h1>📝 Minha Caderneta Digital</h1>
+
+    <div class="days-container">
+        <button class="day-btn active" onclick="changeDay('Segunda')">Segunda</button>
+        <button class="day-btn" onclick="changeDay('Terça')">Terça</button>
+        <button class="day-btn" onclick="changeDay('Quarta')">Quarta</button>
+        <button class="day-btn" onclick="changeDay('Quinta')">Quinta</button>
+        <button class="day-btn" onclick="changeDay('Sexta')">Sexta</button>
+    </div>
+
+    <div class="student-list" id="studentsContainer"></div>
+
+    <h2>📊 Resumo / Relatório Acumulado</h2>
+    <div class="table-responsive">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th style="color: var(--present-txt)">Pres.</th>
+                    <th style="color: var(--absent-txt)">Faltas</th>
+                    <th style="color: var(--just-txt)">Just.</th>
+                </tr>
+            </thead>
+            <tbody id="reportContainer">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="save-bar">
+        <button class="btn-action" onclick="saveData()">💾 Salvar Dados</button>
+        <button class="btn-action btn-secondary" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">📊 Ver Relatório</button>
+    </div>
+
+    <script>
+        // Lista oficial dos seus alunos
+        const alunos = [
+            "ALINE RODRIGUES DE SOUZA",
+            "ANA CLARA JESUS DE SOUZA",
+            "ARIEL OLIVEIRA SILVA",
+            "ARTUR DE SOUZA SANTOS",
+            "CAROLINA SANTOS DA SILVA",
+            "CAUAN DE SOUZA PIRES",
+            "CLEVERTON ROQUE DE SOUZA",
+            "DAIANE OLIVEIRA DA SILVA",
+            "DANILO ARAUJO DE SOUZA",
+            "ISABELLY PIRES SANTOS",
+            "ISMAR DE NOVAIS ARAUJO",
+            "JAMILE SANTOS PEREIRA DE JESUS",
+            "JOÃO LUIS SILVA DE SOUZA",
+            "JOÃO PAULO DE SOUZA BARBOSA",
+            "JONATAS ARCANJO DE ANDRADE",
+            "MARIA CLARA RODRIGUES DE SOUZA",
+            "MIRELY SOUZA FERNADES",
+            "NAIANE DE JESUS ARAUJO",
+            "NATIENE MACEDO ROQUE",
+            "OTACIANO DE JESUS LELIS",
+            "PAMELA SANTANA ARAUJO",
+            "VINICIUS BRITO DE SOUZA",
+            "YASMIN NEVES DE SOUZA"
+        ];
+
+        let currentDay = 'Segunda';
+        
+        /* Estados de presença:
+           'P' = Presente
+           'F' = Falta
+           'J' = Justificado
+        */
+        let attendanceData = JSON.parse(localStorage.getItem('caderneta_dados_v2')) || {};
+
+        function initDayData(day) {
+            if (!attendanceData[day]) {
+                attendanceData[day] = {};
+                alunos.forEach(aluno => {
+                    attendanceData[day][aluno] = ['P', 'P', 'P', 'P', 'P']; // Todos começam com Presente 'P'
+                });
+            }
+        }
+
+        function renderStudents() {
+            initDayData(currentDay);
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = '';
+
+            alunos.forEach(aluno => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+
+                const name = document.createElement('div');
+                name.className = 'student-name';
+                name.innerText = aluno;
+                card.appendChild(name);
+
+                const grid = document.createElement('div');
+                grid.className = 'lessons-grid';
+
+                for (let i = 0; i < 5; i++) {
+                    const state = attendanceData[currentDay][aluno][i];
+                    const btn = document.createElement('button');
+                    
+                    // Define texto e cor baseado no estado atual (P, F ou J)
+                    if (state === 'P') {
+                        btn.className = 'lesson-btn p-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>PRES`;
+                    } else if (state === 'F') {
+                        btn.className = 'lesson-btn f-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>FALTA`;
+                    } else {
+                        btn.className = 'lesson-btn j-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>JUST`;
+                    }
+                    
+                    // Alterna o estado ao clicar: P -> F -> J -> P
+                    btn.onclick = () => {
+                        if (state === 'P') attendanceData[currentDay][aluno][i] = 'F';
+                        else if (state === 'F') attendanceData[currentDay][aluno][i] = 'J';
+                        else attendanceData[currentDay][aluno][i] = 'P';
+                        
+                        renderStudents();
+                        renderReport();
+                    };
+                    grid.appendChild(btn);
+                }
+
+                card.appendChild(grid);
+                container.appendChild(card);
+            });
+        }
+
+        function renderReport() {
+            const reportContainer = document.getElementById('reportContainer');
+            reportContainer.innerHTML = '';
+
+            alunos.forEach(aluno => {
+                let totalP = 0;
+                let totalF = 0;
+                let totalJ = 0;
+
+                // Passa por todos os dias da semana para somar os totais
+                const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+                dias.forEach(d => {
+                    if (attendanceData[d] && attendanceData[d][aluno]) {
+                        attendanceData[d][aluno].forEach(status => {
+                            if (status === 'P') totalP++;
+                            if (status === 'F') totalF++;
+                            if (status === 'J') totalJ++;
+                        });
+                    }
+                });
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${aluno}</strong></td>
+                    <td><span class="badge p-state">${totalP}</span></td>
+                    <td><span class="badge f-state">${totalF}</span></td>
+                    <td><span class="badge j-state">${totalJ}</span></td>
+                `;
+                reportContainer.appendChild(tr);
+            });
+        }
+
+        function changeDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === day);
+            });
+            renderStudents();
+        }
+
+        function saveData() {
+            localStorage.setItem('caderneta_dados_v2', JSON.stringify(attendanceData));
+            alert(`Alterações salvas com sucesso no seu celular!`);
+        }
+
+        // Inicialização
+        renderStudents();
+        renderReport();
+    </script>
+</body>
+</html>
