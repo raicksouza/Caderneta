@@ -17,7 +17,7 @@
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 100px; }
+        body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 120px; }
         h1 { font-size: 1.4rem; margin-bottom: 16px; text-align: center; color: var(--primary); }
         h2 { font-size: 1.2rem; margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
         
@@ -29,7 +29,14 @@
         /* Lista de Alunos */
         .student-list { display: flex; flex-direction: column; gap: 12px; }
         .student-card { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .student-name { font-weight: 600; margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; }
+        
+        /* Cabeçalho do Card do Aluno */
+        .student-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .student-name { font-weight: 600; font-size: 0.95rem; text-transform: uppercase; max-width: 60%; }
+        
+        /* Botão do Cronômetro */
+        .timer-btn { display: flex; align-items: center; gap: 4px; background: #f1f5f9; border: 1px solid var(--border); padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .timer-btn.running { background: #ffedd5; border-color: #fdba74; color: #c2410c; animation: pulse 1.5s infinite; }
         
         /* Grid das 5 Aulas */
         .lessons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -49,16 +56,28 @@
         .report-table th { background: #f1f5f9; font-weight: 600; }
         .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; min-width: 20px; text-align: center; }
 
+        /* Caixa de Texto do Relatório */
+        .export-box { margin-top: 16px; background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 8px; }
+        textarea { width: 100%; height: 150px; font-family: monospace; font-size: 0.85rem; padding: 8px; border: 1px solid var(--border); border-radius: 6px; resize: none; margin-bottom: 10px; }
+        .btn-copy { background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+
         /* Barra Fixa Inferior */
         .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: center; z-index: 100; }
         .btn-action { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; flex: 1; max-width: 200px; cursor: pointer; }
         .btn-secondary { background: #64748b; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
     <h1>📝 Minha Caderneta Digital</h1>
 
+    <!-- Seleção do Dia -->
     <div class="days-container">
         <button class="day-btn active" onclick="changeDay('Segunda')">Segunda</button>
         <button class="day-btn" onclick="changeDay('Terça')">Terça</button>
@@ -67,8 +86,10 @@
         <button class="day-btn" onclick="changeDay('Sexta')">Sexta</button>
     </div>
 
+    <!-- Lista de Chamada -->
     <div class="student-list" id="studentsContainer"></div>
 
+    <!-- Seção do Relatório Semanal/Mensal -->
     <h2>📊 Resumo / Relatório Acumulado</h2>
     <div class="table-responsive">
         <table class="report-table">
@@ -81,17 +102,26 @@
                 </tr>
             </thead>
             <tbody id="reportContainer">
-                </tbody>
+                <!-- Preenchido via JS -->
+            </tbody>
         </table>
     </div>
 
+    <!-- Exportador para Bloco de Notas / WhatsApp -->
+    <h2>📝 Exportar Relatório de Texto</h2>
+    <div class="export-box">
+        <textarea id="textReport" readonly placeholder="Clique no botão abaixo para gerar o texto..."></textarea>
+        <button class="btn-copy" onclick="copyToClipboard()">📋 Copiar Relatório</button>
+    </div>
+
+    <!-- Barra Fixa Inferior para Ações -->
     <div class="save-bar">
         <button class="btn-action" onclick="saveData()">💾 Salvar Dados</button>
-        <button class="btn-action btn-secondary" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">📊 Ver Relatório</button>
+        <button class="btn-action btn-secondary" onclick="generateTextReport()">📊 Gerar Texto</button>
     </div>
 
     <script>
-        // Lista oficial dos seus alunos
+        // Lista de alunos
         const alunos = [
             "ALINE RODRIGUES DE SOUZA",
             "ANA CLARA JESUS DE SOUZA",
@@ -119,19 +149,16 @@
         ];
 
         let currentDay = 'Segunda';
-        
-        /* Estados de presença:
-           'P' = Presente
-           'F' = Falta
-           'J' = Justificado
-        */
         let attendanceData = JSON.parse(localStorage.getItem('caderneta_dados_v2')) || {};
+        
+        // Estrutura para controlar os cronômetros ativos
+        let activeTimers = {};
 
         function initDayData(day) {
             if (!attendanceData[day]) {
                 attendanceData[day] = {};
                 alunos.forEach(aluno => {
-                    attendanceData[day][aluno] = ['P', 'P', 'P', 'P', 'P']; // Todos começam com Presente 'P'
+                    attendanceData[day][aluno] = ['P', 'P', 'P', 'P', 'P'];
                 });
             }
         }
@@ -145,11 +172,32 @@
                 const card = document.createElement('div');
                 card.className = 'student-card';
 
+                // Cabeçalho do Card
+                const header = document.createElement('div');
+                header.className = 'student-header';
+
                 const name = document.createElement('div');
                 name.className = 'student-name';
                 name.innerText = aluno;
-                card.appendChild(name);
+                header.appendChild(name);
 
+                // Botão de Cronômetro
+                const timerBtn = document.createElement('button');
+                timerBtn.id = `timer-${aluno.replace(/\s+/g, '-')}`;
+                
+                if (activeTimers[aluno]) {
+                    timerBtn.className = 'timer-btn running';
+                    timerBtn.innerHTML = `⏱️ ${activeTimers[aluno].timeLeft}s`;
+                } else {
+                    timerBtn.className = 'timer-btn';
+                    timerBtn.innerHTML = `⏱️ Saída`;
+                }
+
+                timerBtn.onclick = () => toggleTimer(aluno);
+                header.appendChild(timerBtn);
+                card.appendChild(header);
+
+                // Grid de Aulas
                 const grid = document.createElement('div');
                 grid.className = 'lessons-grid';
 
@@ -157,7 +205,6 @@
                     const state = attendanceData[currentDay][aluno][i];
                     const btn = document.createElement('button');
                     
-                    // Define texto e cor baseado no estado atual (P, F ou J)
                     if (state === 'P') {
                         btn.className = 'lesson-btn p-state';
                         btn.innerHTML = `<span>AULA ${i+1}</span>PRES`;
@@ -169,7 +216,6 @@
                         btn.innerHTML = `<span>AULA ${i+1}</span>JUST`;
                     }
                     
-                    // Alterna o estado ao clicar: P -> F -> J -> P
                     btn.onclick = () => {
                         if (state === 'P') attendanceData[currentDay][aluno][i] = 'F';
                         else if (state === 'F') attendanceData[currentDay][aluno][i] = 'J';
@@ -186,6 +232,72 @@
             });
         }
 
+        // Função do Cronômetro
+        function toggleTimer(aluno) {
+            const timerId = aluno.replace(/\s+/g, '-');
+            const btn = document.getElementById(`timer-${timerId}`);
+
+            if (activeTimers[aluno]) {
+                // Se já estiver rodando, para o cronômetro
+                clearInterval(activeTimers[aluno].interval);
+                delete activeTimers[aluno];
+                btn.className = 'timer-btn';
+                btn.innerHTML = `⏱️ Saída`;
+            } else {
+                // Inicia contagem regressiva de 5 minutos (300 segundos)
+                let timeLeft = 300; 
+                btn.className = 'timer-btn running';
+                btn.innerHTML = `⏱️ ${timeLeft}s`;
+
+                activeTimers[aluno] = {
+                    timeLeft: timeLeft,
+                    interval: setInterval(() => {
+                        timeLeft--;
+                        if (activeTimers[aluno]) {
+                            activeTimers[aluno].timeLeft = timeLeft;
+                            const currentBtn = document.getElementById(`timer-${timerId}`);
+                            if (currentBtn) {
+                                currentBtn.innerHTML = `⏱️ ${timeLeft}s`;
+                            }
+
+                            if (timeLeft <= 0) {
+                                clearInterval(activeTimers[aluno].interval);
+                                delete activeTimers[aluno];
+                                
+                                // Dá falta automaticamente na primeira aula que estiver marcada como PRESENTE (P)
+                                let deuFalta = false;
+                                for (let i = 0; i < 5; i++) {
+                                    if (attendanceData[currentDay][aluno][i] === 'P') {
+                                        attendanceData[currentDay][aluno][i] = 'F';
+                                        deuFalta = true;
+                                        break;
+                                    }
+                                }
+
+                                // Emite bipe de alerta no celular
+                                try {
+                                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                                    const oscillator = audioCtx.createOscillator();
+                                    oscillator.type = 'sine';
+                                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frequência do bipe
+                                    oscillator.connect(audioCtx.destination);
+                                    oscillator.start();
+                                    oscillator.stop(audioCtx.currentTime + 0.5); // Bipe de 0.5 segundos
+                                } catch (e) {
+                                    console.log("Áudio não suportado ou bloqueado pelo navegador.");
+                                }
+
+                                alert(`⏱️ Tempo esgotado! O aluno ${aluno} excedeu os 5 minutos fora da sala e recebeu FALTA.`);
+                                
+                                renderStudents();
+                                renderReport();
+                            }
+                        }
+                    }, 1000)
+                };
+            }
+        }
+
         function renderReport() {
             const reportContainer = document.getElementById('reportContainer');
             reportContainer.innerHTML = '';
@@ -195,7 +307,6 @@
                 let totalF = 0;
                 let totalJ = 0;
 
-                // Passa por todos os dias da semana para somar os totais
                 const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
                 dias.forEach(d => {
                     if (attendanceData[d] && attendanceData[d][aluno]) {
@@ -216,6 +327,48 @@
                 `;
                 reportContainer.appendChild(tr);
             });
+        }
+
+        function generateTextReport() {
+            let reportText = `📋 RELATÓRIO DE CHAMADA ACUMULADO\n`;
+            reportText += `Gerado em: ${new Date().toLocaleDateString('pt-BR')}\n`;
+            reportText += `====================================\n\n`;
+
+            alunos.forEach((aluno, index) => {
+                let totalP = 0;
+                let totalF = 0;
+                let totalJ = 0;
+
+                const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+                dias.forEach(d => {
+                    if (attendanceData[d] && attendanceData[d][aluno]) {
+                        attendanceData[d][aluno].forEach(status => {
+                            if (status === 'P') totalP++;
+                            if (status === 'F') totalF++;
+                            if (status === 'J') totalJ++;
+                        });
+                    }
+                });
+
+                reportText += `${String(index + 1).padStart(2, '0')}. ${aluno}\n`;
+                reportText += `   Presenças: ${totalP} | Faltas: ${totalF} | Justificativas: ${totalJ}\n`;
+                reportText += `------------------------------------\n`;
+            });
+
+            document.getElementById('textReport').value = reportText;
+            window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('textReport');
+            if (!textarea.value) {
+                alert("Por favor, clique primeiro no botão 'Gerar Texto'!");
+                return;
+            }
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(textarea.value);
+            alert("Relatório copiado para a área de transferência! Agora é só abrir o WhatsApp e colar na conversa.");
         }
 
         function changeDay(day) {
