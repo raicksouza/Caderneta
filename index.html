@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caderneta Digital Pro</title>
+    <title>Caderneta Digital Simplificada</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -11,39 +11,63 @@
             --card: #ffffff;
             --text: #1e293b;
             --border: #e2e8f0;
-            --present-bg: #dcfce7; --present-txt: #166534; --present-border: #86efac;
+            
+            /* Cores dos Estados de Presença */
+            --default-bg: #f1f5f9; --default-txt: #64748b; --default-border: #cbd5e1;
+            --assist-bg: #dcfce7; --assist-txt: #166534; --assist-border: #86efac;
+            --noassist-bg: #ffedd5; --noassist-txt: #c2410c; --noassist-border: #fed7aa;
             --absent-bg: #fee2e2; --absent-txt: #991b1b; --absent-border: #fca5a5;
             --just-bg: #fef9c3; --just-txt: #854d0e; --just-border: #fde047;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 120px; }
-        h1 { font-size: 1.4rem; margin-bottom: 16px; text-align: center; color: var(--primary); }
-        h2 { font-size: 1.2rem; margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
         
-        /* Dias da Semana */
-        .days-container { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; }
-        .day-btn { background: var(--card); border: 1px solid var(--border); padding: 10px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
-        .day-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .header-app { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        h1 { font-size: 1.3rem; color: var(--primary); }
+        h2 { font-size: 1.15rem; margin: 24px 0 12px 0; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+        
+        /* Seletor de Data Manual */
+        .date-container { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; background: var(--card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+        .date-container label { font-size: 0.85rem; font-weight: bold; color: #64748b; }
+        .date-input { border: 1px solid var(--border); padding: 6px; border-radius: 6px; font-size: 0.9rem; color: var(--text); outline: none; }
+
+        /* Painel de Estatísticas */
+        .stats-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 8px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 1.1rem; font-weight: bold; }
+        .stat-lbl { font-size: 0.65rem; color: #64748b; font-weight: bold; text-transform: uppercase; margin-top: 2px; }
+
+        .btn-reset { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         
         /* Lista de Alunos */
         .student-list { display: flex; flex-direction: column; gap: 12px; }
         .student-card { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         
-        /* Cabeçalho do Card do Aluno */
+        /* Cabeçalho do Card */
         .student-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .student-name { font-weight: 600; font-size: 0.95rem; text-transform: uppercase; max-width: 60%; }
+        .student-name { font-weight: 600; font-size: 0.95rem; text-transform: uppercase; max-width: 55%; }
         
-        /* Botão do Cronômetro */
-        .timer-btn { display: flex; align-items: center; gap: 4px; background: #f1f5f9; border: 1px solid var(--border); padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .action-buttons { display: flex; gap: 6px; }
+        
+        /* Botões Extras */
+        .timer-btn, .obs-btn { display: flex; align-items: center; justify-content: center; background: #f1f5f9; border: 1px solid var(--border); padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         .timer-btn.running { background: #ffedd5; border-color: #fdba74; color: #c2410c; animation: pulse 1.5s infinite; }
+        .obs-btn.has-obs { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
         
+        /* Área de Observação */
+        .obs-input-area { display: none; margin-top: 8px; margin-bottom: 8px; }
+        .obs-input-area.active { display: block; }
+        .obs-input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; resize: none; outline: none; }
+
         /* Grid das 5 Aulas */
         .lessons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .lesson-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 2px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-align: center; }
         
-        /* Cores dos Estados */
-        .p-state { background: var(--present-bg); border: 1px solid var(--present-border); color: var(--present-txt); }
+        /* Estilos Visuais dos Estados */
+        .d-state { background: var(--default-bg); border: 1px solid var(--default-border); color: var(--default-txt); }
+        .ast-state { background: var(--assist-bg); border: 1px solid var(--assist-border); color: var(--assist-txt); }
+        .nast-state { background: var(--noassist-bg); border: 1px solid var(--noassist-border); color: var(--noassist-txt); }
         .f-state { background: var(--absent-bg); border: 1px solid var(--absent-border); color: var(--absent-txt); }
         .j-state { background: var(--just-bg); border: 1px solid var(--just-border); color: var(--just-txt); }
         
@@ -59,12 +83,26 @@
         /* Caixa de Texto do Relatório */
         .export-box { margin-top: 16px; background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 8px; }
         textarea { width: 100%; height: 150px; font-family: monospace; font-size: 0.85rem; padding: 8px; border: 1px solid var(--border); border-radius: 6px; resize: none; margin-bottom: 10px; }
-        .btn-copy { background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .btn-copy { background: #10b981; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+        .btn-pdf { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+        .btn-whatsapp { background: #25d366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; grid-column: span 2; font-size: 0.9rem; margin-top: 4px; }
 
         /* Barra Fixa Inferior */
         .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: center; z-index: 100; }
         .btn-action { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; flex: 1; max-width: 200px; cursor: pointer; }
         .btn-secondary { background: #64748b; }
+
+        /* Estilos de Impressão */
+        @media print {
+            body { padding: 0; background: white; color: black; }
+            .date-container, .stats-panel, .student-list, .save-bar, .export-box, h1, h2:first-of-type, .btn-reset, .btn-group { display: none !important; }
+            h2 { border-bottom: 2px solid black; }
+            .report-table { font-size: 10pt; width: 100%; border: 1px solid black; }
+            .report-table th { background: #ddd !important; -webkit-print-color-adjust: exact; }
+            .badge { border: 1px solid #ccc !important; color: black !important; background: transparent !important; }
+        }
 
         @keyframes pulse {
             0% { opacity: 1; }
@@ -75,28 +113,49 @@
 </head>
 <body>
 
-    <h1>📝 Minha Caderneta Digital</h1>
+    <div class="header-app">
+        <h1>📝 Chamada do Dia</h1>
+        <button class="btn-reset" onclick="resetAllData()">🧼 Limpar Chamada</button>
+    </div>
 
-    <!-- Seleção do Dia -->
-    <div class="days-container">
-        <button class="day-btn active" onclick="changeDay('Segunda')">Segunda</button>
-        <button class="day-btn" onclick="changeDay('Terça')">Terça</button>
-        <button class="day-btn" onclick="changeDay('Quarta')">Quarta</button>
-        <button class="day-btn" onclick="changeDay('Quinta')">Quinta</button>
-        <button class="day-btn" onclick="changeDay('Sexta')">Sexta</button>
+    <!-- Data do Registro -->
+    <div class="date-container">
+        <label for="dateSelect">📅 Data da Aula:</label>
+        <input type="date" id="dateSelect" class="date-input" onchange="saveDateSetting()">
+    </div>
+
+    <!-- Painel de Contagem em Tempo Real -->
+    <div class="stats-panel">
+        <div class="stat-card" style="border-left: 4px solid var(--assist-border)">
+            <div class="stat-val" id="countAST" style="color: var(--assist-txt)">0</div>
+            <div class="stat-lbl">Assistiu</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid var(--noassist-border)">
+            <div class="stat-val" id="countNAST" style="color: var(--noassist-txt)">0</div>
+            <div class="stat-lbl">N/Assis</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid var(--absent-border)">
+            <div class="stat-val" id="countF" style="color: var(--absent-txt)">0</div>
+            <div class="stat-lbl">Faltas</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid var(--just-border)">
+            <div class="stat-val" id="countJ" style="color: var(--just-txt)">0</div>
+            <div class="stat-lbl">Justif</div>
+        </div>
     </div>
 
     <!-- Lista de Chamada -->
     <div class="student-list" id="studentsContainer"></div>
 
-    <!-- Seção do Relatório Semanal/Mensal -->
-    <h2>📊 Resumo / Relatório Acumulado</h2>
+    <!-- Seção do Relatório Acumulado do Dia -->
+    <h2>📊 Resumo das Aulas</h2>
     <div class="table-responsive">
         <table class="report-table">
             <thead>
                 <tr>
                     <th>Aluno</th>
-                    <th style="color: var(--present-txt)">Pres.</th>
+                    <th style="color: var(--assist-txt)">Assis.</th>
+                    <th style="color: var(--noassist-txt)">N/Assis.</th>
                     <th style="color: var(--absent-txt)">Faltas</th>
                     <th style="color: var(--just-txt)">Just.</th>
                 </tr>
@@ -108,10 +167,14 @@
     </div>
 
     <!-- Exportador para Bloco de Notas / WhatsApp -->
-    <h2>📝 Exportar Relatório de Texto</h2>
+    <h2>📝 Exportar Relatório</h2>
     <div class="export-box">
-        <textarea id="textReport" readonly placeholder="Clique no botão abaixo para gerar o texto..."></textarea>
-        <button class="btn-copy" onclick="copyToClipboard()">📋 Copiar Relatório</button>
+        <textarea id="textReport" readonly placeholder="Clique no botão 'Gerar Texto' abaixo para montar o relatório..."></textarea>
+        <div class="btn-group">
+            <button class="btn-copy" onclick="copyToClipboard()">📋 Copiar Texto</button>
+            <button class="btn-pdf" onclick="window.print()">🖨️ Gerar PDF / Imprimir</button>
+            <button class="btn-whatsapp" onclick="sendToWhatsApp()">🟢 Enviar para o WhatsApp</button>
+        </div>
     </div>
 
     <!-- Barra Fixa Inferior para Ações -->
@@ -121,7 +184,6 @@
     </div>
 
     <script>
-        // Lista de alunos
         const alunos = [
             "ALINE RODRIGUES DE SOUZA",
             "ANA CLARA JESUS DE SOUZA",
@@ -144,27 +206,66 @@
             "NATIENE MACEDO ROQUE",
             "OTACIANO DE JESUS LELIS",
             "PAMELA SANTANA ARAUJO",
+            "TAUAN GABRIEL ALVES DE SOUZA",
             "VINICIUS BRITO DE SOUZA",
             "YASMIN NEVES DE SOUZA"
         ];
 
-        let currentDay = 'Segunda';
-        let attendanceData = JSON.parse(localStorage.getItem('caderneta_dados_v2')) || {};
-        
-        // Estrutura para controlar os cronômetros ativos
+        // Carrega dados ou limpa se houver erro ou dado corrompido
+        let attendanceData = {};
+        try {
+            attendanceData = JSON.parse(localStorage.getItem('caderneta_diaria_dados')) || {};
+            if (typeof attendanceData !== 'object' || Array.isArray(attendanceData)) {
+                attendanceData = {};
+            }
+        } catch (e) {
+            attendanceData = {};
+        }
+
+        let obsData = {};
+        try {
+            obsData = JSON.parse(localStorage.getItem('caderneta_diaria_obs')) || {};
+            if (typeof obsData !== 'object' || Array.isArray(obsData)) {
+                obsData = {};
+            }
+        } catch (e) {
+            obsData = {};
+        }
+
         let activeTimers = {};
 
-        function initDayData(day) {
-            if (!attendanceData[day]) {
-                attendanceData[day] = {};
-                alunos.forEach(aluno => {
-                    attendanceData[day][aluno] = ['P', 'P', 'P', 'P', 'P'];
-                });
+        // Executado ao carregar a página
+        window.onload = () => {
+            const dateInput = document.getElementById('dateSelect');
+            const savedDate = localStorage.getItem('caderneta_data_atual');
+            if (savedDate) {
+                dateInput.value = savedDate;
+            } else {
+                const hoje = new Date().toISOString().split('T')[0];
+                dateInput.value = hoje;
+                localStorage.setItem('caderneta_data_atual', hoje);
             }
+            initDayData();
+            renderStudents();
+            renderReport();
+        };
+
+        function saveDateSetting() {
+            const dateInput = document.getElementById('dateSelect');
+            localStorage.setItem('caderneta_data_atual', dateInput.value);
+        }
+
+        // FUNÇÃO DE SEGURANÇA: Garante que cada aluno tenha exatamente um array de 5 posições válidas
+        function initDayData() {
+            alunos.forEach(aluno => {
+                if (!attendanceData[aluno] || !Array.isArray(attendanceData[aluno]) || attendanceData[aluno].length !== 5) {
+                    attendanceData[aluno] = ['D', 'D', 'D', 'D', 'D']; // Tudo 'Vago/Branco'
+                }
+            });
         }
 
         function renderStudents() {
-            initDayData(currentDay);
+            initDayData();
             const container = document.getElementById('studentsContainer');
             container.innerHTML = '';
 
@@ -172,7 +273,6 @@
                 const card = document.createElement('div');
                 card.className = 'student-card';
 
-                // Cabeçalho do Card
                 const header = document.createElement('div');
                 header.className = 'student-header';
 
@@ -181,10 +281,20 @@
                 name.innerText = aluno;
                 header.appendChild(name);
 
-                // Botão de Cronômetro
+                const actButtons = document.createElement('div');
+                actButtons.className = 'action-buttons';
+
+                // Botão de Observação 💬
+                const obsBtn = document.createElement('button');
+                const temObs = obsData[aluno] && obsData[aluno].trim() !== "";
+                obsBtn.className = `obs-btn ${temObs ? 'has-obs' : ''}`;
+                obsBtn.innerHTML = `💬 ${temObs ? 'Ver' : 'Nota'}`;
+                obsBtn.onclick = () => toggleObsField(aluno);
+                actButtons.appendChild(obsBtn);
+
+                // Botão de Cronômetro ⏱️
                 const timerBtn = document.createElement('button');
                 timerBtn.id = `timer-${aluno.replace(/\s+/g, '-')}`;
-                
                 if (activeTimers[aluno]) {
                     timerBtn.className = 'timer-btn running';
                     timerBtn.innerHTML = `⏱️ ${activeTimers[aluno].timeLeft}s`;
@@ -192,22 +302,52 @@
                     timerBtn.className = 'timer-btn';
                     timerBtn.innerHTML = `⏱️ Saída`;
                 }
-
                 timerBtn.onclick = () => toggleTimer(aluno);
-                header.appendChild(timerBtn);
+                actButtons.appendChild(timerBtn);
+
+                header.appendChild(actButtons);
                 card.appendChild(header);
+
+                // Campo de Texto de Observação
+                const obsDiv = document.createElement('div');
+                obsDiv.id = `obs-div-${aluno.replace(/\s+/g, '-')}`;
+                obsDiv.className = 'obs-input-area';
+                
+                const textarea = document.createElement('textarea');
+                textarea.className = 'obs-input';
+                textarea.placeholder = `Escreva uma anotação sobre ${aluno}...`;
+                textarea.value = obsData[aluno] || '';
+                textarea.oninput = (e) => {
+                    obsData[aluno] = e.target.value;
+                    localStorage.setItem('caderneta_diaria_obs', JSON.stringify(obsData));
+                    if (e.target.value.trim() !== "") {
+                        obsBtn.classList.add('has-obs');
+                        obsBtn.innerText = 'Ver';
+                    } else {
+                        obsBtn.classList.remove('has-obs');
+                        obsBtn.innerText = 'Nota';
+                    }
+                };
+                obsDiv.appendChild(textarea);
+                card.appendChild(obsDiv);
 
                 // Grid de Aulas
                 const grid = document.createElement('div');
                 grid.className = 'lessons-grid';
 
                 for (let i = 0; i < 5; i++) {
-                    const state = attendanceData[currentDay][aluno][i];
+                    const state = attendanceData[aluno][i];
                     const btn = document.createElement('button');
                     
-                    if (state === 'P') {
-                        btn.className = 'lesson-btn p-state';
-                        btn.innerHTML = `<span>AULA ${i+1}</span>PRES`;
+                    if (state === 'D') {
+                        btn.className = 'lesson-btn d-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>VAGO`;
+                    } else if (state === 'AST') {
+                        btn.className = 'lesson-btn ast-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>AST`;
+                    } else if (state === 'NAST') {
+                        btn.className = 'lesson-btn nast-state';
+                        btn.innerHTML = `<span>AULA ${i+1}</span>N-AST`;
                     } else if (state === 'F') {
                         btn.className = 'lesson-btn f-state';
                         btn.innerHTML = `<span>AULA ${i+1}</span>FALTA`;
@@ -217,12 +357,15 @@
                     }
                     
                     btn.onclick = () => {
-                        if (state === 'P') attendanceData[currentDay][aluno][i] = 'F';
-                        else if (state === 'F') attendanceData[currentDay][aluno][i] = 'J';
-                        else attendanceData[currentDay][aluno][i] = 'P';
+                        if (state === 'D') attendanceData[aluno][i] = 'AST';
+                        else if (state === 'AST') attendanceData[aluno][i] = 'NAST';
+                        else if (state === 'NAST') attendanceData[aluno][i] = 'F';
+                        else if (state === 'F') attendanceData[aluno][i] = 'J';
+                        else attendanceData[aluno][i] = 'D';
                         
                         renderStudents();
                         renderReport();
+                        updateTopCounters();
                     };
                     grid.appendChild(btn);
                 }
@@ -230,21 +373,25 @@
                 card.appendChild(grid);
                 container.appendChild(card);
             });
+            updateTopCounters();
         }
 
-        // Função do Cronômetro
+        function toggleObsField(aluno) {
+            const id = `obs-div-${aluno.replace(/\s+/g, '-')}`;
+            const target = document.getElementById(id);
+            target.classList.toggle('active');
+        }
+
         function toggleTimer(aluno) {
             const timerId = aluno.replace(/\s+/g, '-');
             const btn = document.getElementById(`timer-${timerId}`);
 
             if (activeTimers[aluno]) {
-                // Se já estiver rodando, para o cronômetro
                 clearInterval(activeTimers[aluno].interval);
                 delete activeTimers[aluno];
                 btn.className = 'timer-btn';
                 btn.innerHTML = `⏱️ Saída`;
             } else {
-                // Inicia contagem regressiva de 5 minutos (300 segundos)
                 let timeLeft = 300; 
                 btn.className = 'timer-btn running';
                 btn.innerHTML = `⏱️ ${timeLeft}s`;
@@ -264,30 +411,24 @@
                                 clearInterval(activeTimers[aluno].interval);
                                 delete activeTimers[aluno];
                                 
-                                // Dá falta automaticamente na primeira aula que estiver marcada como PRESENTE (P)
-                                let deuFalta = false;
                                 for (let i = 0; i < 5; i++) {
-                                    if (attendanceData[currentDay][aluno][i] === 'P') {
-                                        attendanceData[currentDay][aluno][i] = 'F';
-                                        deuFalta = true;
+                                    if (attendanceData[aluno][i] === 'D' || attendanceData[aluno][i] === 'AST') {
+                                        attendanceData[aluno][i] = 'F';
                                         break;
                                     }
                                 }
 
-                                // Emite bipe de alerta no celular
                                 try {
                                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                                     const oscillator = audioCtx.createOscillator();
                                     oscillator.type = 'sine';
-                                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frequência do bipe
+                                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
                                     oscillator.connect(audioCtx.destination);
                                     oscillator.start();
-                                    oscillator.stop(audioCtx.currentTime + 0.5); // Bipe de 0.5 segundos
-                                } catch (e) {
-                                    console.log("Áudio não suportado ou bloqueado pelo navegador.");
-                                }
+                                    oscillator.stop(audioCtx.currentTime + 0.5);
+                                } catch (e) {}
 
-                                alert(`⏱️ Tempo esgotado! O aluno ${aluno} excedeu os 5 minutos fora da sala e recebeu FALTA.`);
+                                alert(`⏱️ Tempo esgotado! O aluno ${aluno} passou de 5 minutos fora da sala e recebeu FALTA.`);
                                 
                                 renderStudents();
                                 renderReport();
@@ -298,30 +439,47 @@
             }
         }
 
+        function updateTopCounters() {
+            let totalAST = 0, totalNAST = 0, totalF = 0, totalJ = 0;
+
+            alunos.forEach(aluno => {
+                if (attendanceData[aluno]) {
+                    attendanceData[aluno].forEach(status => {
+                        if (status === 'AST') totalAST++;
+                        if (status === 'NAST') totalNAST++;
+                        if (status === 'F') totalF++;
+                        if (status === 'J') totalJ++;
+                    });
+                }
+            });
+
+            document.getElementById('countAST').innerText = totalAST;
+            document.getElementById('countNAST').innerText = totalNAST;
+            document.getElementById('countF').innerText = totalF;
+            document.getElementById('countJ').innerText = totalJ;
+        }
+
         function renderReport() {
             const reportContainer = document.getElementById('reportContainer');
             reportContainer.innerHTML = '';
 
             alunos.forEach(aluno => {
-                let totalP = 0;
-                let totalF = 0;
-                let totalJ = 0;
+                let totalAST = 0, totalNAST = 0, totalF = 0, totalJ = 0;
 
-                const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
-                dias.forEach(d => {
-                    if (attendanceData[d] && attendanceData[d][aluno]) {
-                        attendanceData[d][aluno].forEach(status => {
-                            if (status === 'P') totalP++;
-                            if (status === 'F') totalF++;
-                            if (status === 'J') totalJ++;
-                        });
-                    }
-                });
+                if (attendanceData[aluno]) {
+                    attendanceData[aluno].forEach(status => {
+                        if (status === 'AST') totalAST++;
+                        if (status === 'NAST') totalNAST++;
+                        if (status === 'F') totalF++;
+                        if (status === 'J') totalJ++;
+                    });
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${aluno}</strong></td>
-                    <td><span class="badge p-state">${totalP}</span></td>
+                    <td><span class="badge ast-state">${totalAST}</span></td>
+                    <td><span class="badge nast-state">${totalNAST}</span></td>
                     <td><span class="badge f-state">${totalF}</span></td>
                     <td><span class="badge j-state">${totalJ}</span></td>
                 `;
@@ -329,29 +487,38 @@
             });
         }
 
+        function formatarData(dataString) {
+            const partes = dataString.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+            return dataString;
+        }
+
         function generateTextReport() {
-            let reportText = `📋 RELATÓRIO DE CHAMADA ACUMULADO\n`;
-            reportText += `Gerado em: ${new Date().toLocaleDateString('pt-BR')}\n`;
+            const dataAula = formatarData(document.getElementById('dateSelect').value);
+            let reportText = `📋 RELATÓRIO DE CHAMADA DIÁRIA (AULAS TV SALVADOR)\n`;
+            reportText += `Data: ${dataAula}\n`;
             reportText += `====================================\n\n`;
 
             alunos.forEach((aluno, index) => {
-                let totalP = 0;
-                let totalF = 0;
-                let totalJ = 0;
+                let totalAST = 0, totalNAST = 0, totalF = 0, totalJ = 0;
 
-                const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
-                dias.forEach(d => {
-                    if (attendanceData[d] && attendanceData[d][aluno]) {
-                        attendanceData[d][aluno].forEach(status => {
-                            if (status === 'P') totalP++;
-                            if (status === 'F') totalF++;
-                            if (status === 'J') totalJ++;
-                        });
-                    }
-                });
+                if (attendanceData[aluno]) {
+                    attendanceData[aluno].forEach(status => {
+                        if (status === 'AST') totalAST++;
+                        if (status === 'NAST') totalNAST++;
+                        if (status === 'F') totalF++;
+                        if (status === 'J') totalJ++;
+                    });
+                }
 
                 reportText += `${String(index + 1).padStart(2, '0')}. ${aluno}\n`;
-                reportText += `   Presenças: ${totalP} | Faltas: ${totalF} | Justificativas: ${totalJ}\n`;
+                reportText += `   Assistiu: ${totalAST} | Não Assistiu: ${totalNAST} | Faltas: ${totalF} | Justificativas: ${totalJ}\n`;
+                
+                if (obsData[aluno] && obsData[aluno].trim() !== "") {
+                    reportText += `   ⚠️ OBS: ${obsData[aluno].trim()}\n`;
+                }
                 reportText += `------------------------------------\n`;
             });
 
@@ -368,25 +535,44 @@
             textarea.select();
             textarea.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(textarea.value);
-            alert("Relatório copiado para a área de transferência! Agora é só abrir o WhatsApp e colar na conversa.");
+            alert("Relatório copiado! Agora você pode colar no seu Bloco de Notas ou enviar para o WhatsApp.");
         }
 
-        function changeDay(day) {
-            currentDay = day;
-            document.querySelectorAll('.day-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText === day);
-            });
-            renderStudents();
+        function sendToWhatsApp() {
+            const textarea = document.getElementById('textReport');
+            if (!textarea.value) {
+                alert("Por favor, gere o texto antes de enviar para o WhatsApp!");
+                return;
+            }
+            const encodedText = encodeURIComponent(textarea.value);
+            const url = `https://api.whatsapp.com/send?text=${encodedText}`;
+            window.open(url, '_blank');
         }
 
         function saveData() {
-            localStorage.setItem('caderneta_dados_v2', JSON.stringify(attendanceData));
+            localStorage.setItem('caderneta_diaria_dados', JSON.stringify(attendanceData));
+            localStorage.setItem('caderneta_diaria_obs', JSON.stringify(obsData));
             alert(`Alterações salvas com sucesso no seu celular!`);
         }
 
-        // Inicialização
-        renderStudents();
-        renderReport();
+        function resetAllData() {
+            if (confirm("🚨 deseja apagar a chamada atual para iniciar o registro de hoje? (Verifique se copiou o texto antes!)")) {
+                localStorage.removeItem('caderneta_diaria_dados');
+                localStorage.removeItem('caderneta_diaria_obs');
+                attendanceData = {};
+                obsData = {};
+                activeTimers = {};
+                
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dateSelect').value = hoje;
+                localStorage.setItem('caderneta_data_atual', hoje);
+                
+                renderStudents();
+                renderReport();
+                document.getElementById('textReport').value = '';
+                alert("🧼 Tela limpa! Pronto para iniciar a chamada de hoje.");
+            }
+        }
     </script>
 </body>
 </html>
